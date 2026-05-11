@@ -1,12 +1,15 @@
-.PHONY: dev dev-d down down-v restart-be logs-be logs-mongo shell-be shell-mongo
+.PHONY: dev dev-d dev-build down down-v restart-be logs-be logs-mongo shell-be shell-mongo lint lint-fix
 
 # Development
 
 dev:
-	docker compose -f docker-compose.dev.yml up
+	docker compose -f docker-compose.dev.yml up --remove-orphans
 
 dev-d:
-	docker compose -f docker-compose.dev.yml up -d
+	docker compose -f docker-compose.dev.yml up -d --remove-orphans
+
+dev-build:
+	docker compose -f docker-compose.dev.yml up --build -d --remove-orphans
 
 down:
 	docker compose -f docker-compose.dev.yml down
@@ -34,3 +37,11 @@ shell-mongo:
 	docker compose -f docker-compose.dev.yml exec mongodb mongosh \
 	  -u $${MONGO_USER:-admin} -p $${MONGO_PASSWORD:-changeme} \
 	  --authenticationDatabase admin $${MONGO_DB:-server_dashboard}
+
+# Tests
+
+lint:
+	docker compose -f docker-compose.dev.yml exec backend ruff check .
+
+lint-fix:
+	docker compose -f docker-compose.dev.yml exec backend ruff check . --fix
