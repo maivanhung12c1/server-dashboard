@@ -48,3 +48,7 @@ class MongoDB:
         return self.db
     
 mongodb = MongoDB()
+
+async def get_db() -> AsyncIOMotorDatabase:
+    """FastAPI dependency — inject database into route handlers."""
+    return mongodb.get_db()

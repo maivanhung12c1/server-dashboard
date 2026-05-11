@@ -1,4 +1,9 @@
-.PHONY: dev dev-d dev-build down down-v restart-be logs-be logs-mongo shell-be shell-mongo lint lint-fix
+.PHONY: dev dev-d dev-build down down-v restart-be \
+        logs-be logs-mongo \
+        shell-be shell-mongo \
+        lint lint-fix \
+        test test-unit test-integration \
+        seed
 
 # Development
 
@@ -38,10 +43,27 @@ shell-mongo:
 	  -u $${MONGO_USER:-admin} -p $${MONGO_PASSWORD:-changeme} \
 	  --authenticationDatabase admin $${MONGO_DB:-server_dashboard}
 
-# Tests
+# Lint
 
 lint:
 	docker compose -f docker-compose.dev.yml exec backend ruff check .
 
 lint-fix:
 	docker compose -f docker-compose.dev.yml exec backend ruff check . --fix
+
+# Tests
+
+test-unit:
+	docker compose -f docker-compose.dev.yml exec backend \
+	  pytest tests/unit/ -v
+
+test-integration:
+	docker compose -f docker-compose.dev.yml exec backend \
+	  pytest tests/integration/ -v
+
+test:
+	docker compose -f docker-compose.dev.yml exec backend \
+	  pytest tests/ -v --tb=short
+
+seed:
+	docker compose -f docker-compose.dev.yml exec backend python seed.py
