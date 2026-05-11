@@ -47,6 +47,24 @@ services:
       timeout: 5s
       retries: 3
 
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      VITE_API_TARGET: http://backend:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - dev_net
+    depends_on:
+      - backend
+      
 volumes:
   mongodb_dev_data:
 
