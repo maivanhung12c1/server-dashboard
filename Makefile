@@ -1,4 +1,9 @@
-.PHONY: dev dev-d dev-build down down-v restart-be logs-be logs-mongo shell-be shell-mongo lint lint-fix test-unit test-integration test
+.PHONY: dev dev-d dev-build down down-v restart-be \
+        logs-be logs-mongo \
+        shell-be shell-mongo \
+        lint lint-fix \
+        test test-unit test-integration \
+        seed
 
 # Development
 
@@ -59,3 +64,6 @@ test-integration:
 test:
 	docker compose -f docker-compose.dev.yml exec backend \
 	  pytest tests/ -v --tb=short
+
+seed:
+	docker compose -f docker-compose.dev.yml exec backend python seed.py
