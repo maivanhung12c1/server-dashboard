@@ -20,7 +20,7 @@ class CRUDActivity:
         doc = {
             "_id": str(uuid.uuid4()),
             "server_id": server_id,
-            server_name: server_name,
+            "server_name": server_name,
             "action": action,
             "detail": detail,
             "timestamp": utcnow(),
