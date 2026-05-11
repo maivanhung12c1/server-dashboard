@@ -29,11 +29,11 @@ class CRUDServer:
     ) -> tuple[list[dict], int]:
         filters: dict = {}
         if name:
-            filters["name"] = {"$regex": name, "$option": "i"}
+            filters["name"] = {"$regex": name, "$options": "i"}
         if status:
             filters["status"] = status
         if country:
-            filters["country"] = {"$regex": country, "$option": "i"}
+            filters["country"] = {"$regex": country, "$options": "i"}
         if os:
             filters["os"] = {"$regex": os, "$options": "i"}
         if platform:

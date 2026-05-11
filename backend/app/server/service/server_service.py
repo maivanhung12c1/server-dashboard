@@ -28,7 +28,7 @@ class ServerService:
         os: str | None = None,
         platform: str | None = None,
     ) -> PageData[GetServerDetail]:
-        items, total = await server_dao.list(
+        items, total = await server_dao.get_list(
             db,
             page=page,
             size=size,
