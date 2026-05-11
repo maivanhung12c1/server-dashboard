@@ -1,6 +1,6 @@
 .PHONY: dev dev-d dev-build down down-v restart-be \
         logs-be logs-mongo \
-        shell-be shell-mongo \
+        shell-be shell-mongo shell-fe \
         lint lint-fix \
         test test-unit test-integration \
         seed
@@ -38,6 +38,9 @@ logs-mongo:
 shell-be:
 	docker compose -f docker-compose.dev.yml exec backend bash
 
+shell-fe:
+	docker compose -f docker-compose.dev.yml exec frontend sh
+
 shell-mongo:
 	docker compose -f docker-compose.dev.yml exec mongodb mongosh \
 	  -u $${MONGO_USER:-admin} -p $${MONGO_PASSWORD:-changeme} \
@@ -67,3 +70,8 @@ test:
 
 seed:
 	docker compose -f docker-compose.dev.yml exec backend python seed.py
+
+# Frontend
+
+build-fe:
+	docker compose -f docker-compose.dev.yml exec frontend npm run build
