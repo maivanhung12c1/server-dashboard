@@ -86,7 +86,7 @@ class CRUDServer:
         pipeline = [
             {"$group": {"_id": f"${field}", "count": {"$sum": 1}}},
             {"$sort": {"count": -1}},
-            {"limit": limit},
+            {"$limit": limit},
         ]
         return await db[self.COLLECTION].aggregate(pipeline).to_list(length=limit)
     
