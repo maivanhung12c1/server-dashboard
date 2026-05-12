@@ -70,9 +70,25 @@ def _register_routers(app: FastAPI) -> None:
     from app.router import router
     app.include_router(router)
     
-    @app.get("/health", tags=["System"])
-    async def health_check() -> dict:
-        return {"status": "ok", "version": settings.PROJECT_VERSION}
+    # @app.get("/health", tags=["System"])
+    # async def health_check() -> dict:
+    #     return {"status": "ok", "version": settings.PROJECT_VERSION}
+    @app.get("/health", tags=["System"])                                                                                                                                                                                                                  
+    async def health_check() -> JSONResponse:
+        db_ok = await mongodb.ping()                                                                                                                                                                                                                      
+        if not db_ok:                                                                                                                                                                                                                                     
+            return JSONResponse(
+                status_code=503,  # Service Unavailable                                                                                                                                                                                                   
+                content={
+                    "status": "degraded",
+                    "db": "unreachable",                                                                                                                                                                                                                  
+                    "version": settings.PROJECT_VERSION,
+                },                                                                                                                                                                                                                                        
+            )       
+        return JSONResponse(
+            status_code=200,                                                                                                                                                                                                                              
+            content={"status": "ok", "version": settings.PROJECT_VERSION},
+        )  
 
 
 def _register_exception_handlers(app: FastAPI) -> None:
