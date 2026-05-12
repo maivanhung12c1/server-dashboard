@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import datetime
 
@@ -29,15 +30,15 @@ class CRUDServer:
     ) -> tuple[list[dict], int]:
         filters: dict = {}
         if name:
-            filters["name"] = {"$regex": name, "$options": "i"}
+            filters["name"] = {"$regex": re.escape(name), "$options": "i"}
         if status:
             filters["status"] = status
         if country:
-            filters["country"] = {"$regex": country, "$options": "i"}
+            filters["country"] = {"$regex": re.escape(country), "$options": "i"}
         if os:
-            filters["os"] = {"$regex": os, "$options": "i"}
+            filters["os"] = {"$regex": re.escape(os), "$options": "i"}
         if platform:
-            filters["platform"] = {"$regex": platform, "$options": "i"}
+            filters["platform"] = {"$regex": re.escape(platform), "$options": "i"}
         
         skip = (page - 1) * size
         total = await db[self.COLLECTION].count_documents(filters)
