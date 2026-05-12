@@ -16,11 +16,13 @@ export default function Servers() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const size = 15;
 
   const fetchServers = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await serversApi.list({
         page,
@@ -31,6 +33,8 @@ export default function Servers() {
       setServers(res.data.items);
       setTotal(res.data.total);
       setTotalPages(res.data.total_pages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load servers");
     } finally {
       setLoading(false);
     }
@@ -54,8 +58,12 @@ export default function Servers() {
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete server "${name}"?`)) return;
-    await serversApi.delete(id);
-    fetchServers();
+    try {
+      await serversApi.delete(id);
+      fetchServers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete server");
+    }
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -82,6 +90,18 @@ export default function Servers() {
           Add Server
         </button>
       </div>
+
+      {error && (
+        <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-between">
+          <p className="text-sm text-red-400">{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="text-red-400 hover:text-red-300 ml-4 flex-shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="card p-4">

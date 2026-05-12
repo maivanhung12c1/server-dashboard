@@ -1,6 +1,5 @@
 import uuid
 
-from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from utils.datetime_utils import utcnow

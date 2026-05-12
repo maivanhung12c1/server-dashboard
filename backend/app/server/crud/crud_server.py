@@ -1,8 +1,11 @@
+import re
 import uuid
 from datetime import datetime
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.errors import DuplicateKeyError
 
+from common.exception.errors import ConflictError
 from utils.datetime_utils import utcnow
 
 
@@ -29,15 +32,15 @@ class CRUDServer:
     ) -> tuple[list[dict], int]:
         filters: dict = {}
         if name:
-            filters["name"] = {"$regex": name, "$options": "i"}
+            filters["name"] = {"$regex": re.escape(name), "$options": "i"}
         if status:
             filters["status"] = status
         if country:
-            filters["country"] = {"$regex": country, "$options": "i"}
+            filters["country"] = {"$regex": re.escape(country), "$options": "i"}
         if os:
-            filters["os"] = {"$regex": os, "$options": "i"}
+            filters["os"] = {"$regex": re.escape(os), "$options": "i"}
         if platform:
-            filters["platform"] = {"$regex": platform, "$options": "i"}
+            filters["platform"] = {"$regex": re.escape(platform), "$options": "i"}
         
         skip = (page - 1) * size
         total = await db[self.COLLECTION].count_documents(filters)
@@ -59,7 +62,10 @@ class CRUDServer:
             "created_at": now,
             "updated_at": now,
         }
-        await db[self.COLLECTION].insert_one(doc)
+        try:
+            await db[self.COLLECTION].insert_one(doc)
+        except DuplicateKeyError:
+            raise ConflictError(f"Server with name '{data['name']}' already exists")
         return doc
     
     async def update(
@@ -67,11 +73,14 @@ class CRUDServer:
     ) -> dict | None:
         data["updated_at"] = utcnow()
         from pymongo import ReturnDocument
-        return await db[self.COLLECTION].find_one_and_update(
-            {"_id": server_id},
-            {"$set": data},
-            return_document=ReturnDocument.AFTER
-        )
+        try:
+            return await db[self.COLLECTION].find_one_and_update(
+                {"_id": server_id},
+                {"$set": data},
+                return_document=ReturnDocument.AFTER,
+            )
+        except DuplicateKeyError:
+            raise ConflictError(f"Server with name '{data['name']}' already exists")
     
     async def delete(self, db: AsyncIOMotorDatabase, server_id: str) -> bool:
         result = await db[self.COLLECTION].delete_one({"_id": server_id})

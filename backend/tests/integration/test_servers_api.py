@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from tests.conftest import make_server
@@ -165,3 +167,45 @@ async def test_delete_server(client):
 async def test_delete_nonexistent_returns_404(client):
     res = await client.delete("/api/v1/servers/no-such-id")
     assert res.status_code == 404
+
+
+# ReDoS / regex injection
+
+async def test_search_regex_special_chars_treated_as_literal(client):
+    await create(client, name="web.server", ip_address="10.0.0.1")
+    await create(client, name="web-server", ip_address="10.0.0.2")
+
+    res = await client.get("/api/v1/servers?name=web.server")
+    data = res.json()["data"]
+    assert data["total"] == 1
+    assert data["items"][0]["name"] == "web.server"
+
+
+async def test_search_malicious_regex_pattern_does_not_crash(client):
+    await create(client, name="safe-server", ip_address="10.0.0.1")
+
+    res = await client.get("/api/v1/servers?name=(a%2B)%2B")
+    assert res.status_code == 200
+    assert res.json()["data"]["total"] == 0
+
+
+async def test_search_brackets_treated_as_literal(client):
+    await create(client, name="[Oo]nline-server", ip_address="10.0.0.1")
+    await create(client, name="Online-server", ip_address="10.0.0.2")
+
+    res = await client.get("/api/v1/servers?name=%5BOo%5Dnline")
+    data = res.json()["data"]
+    assert data["total"] == 1
+    assert data["items"][0]["name"] == "[Oo]nline-server"
+
+
+# Race condition
+
+async def test_concurrent_create_same_name_returns_409_not_500(client):
+    results = await asyncio.gather(
+        client.post("/api/v1/servers", json=make_server()),
+        client.post("/api/v1/servers", json=make_server()),
+        return_exceptions=True,
+    )
+    statuses = sorted([r.status_code for r in results])
+    assert statuses == [201, 409], f"Expected [201, 409], got {statuses}"

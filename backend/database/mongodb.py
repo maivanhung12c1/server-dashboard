@@ -47,6 +47,14 @@ class MongoDB:
             raise RuntimeError("MongoDB not connected. Call connect() first.")
         return self.db
     
+    async def ping(self) -> bool:
+        try:
+            await self.client.admin.command("ping")
+            return True
+        except Exception:
+            return False
+
+    
 mongodb = MongoDB()
 
 async def get_db() -> AsyncIOMotorDatabase:
