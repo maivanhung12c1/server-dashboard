@@ -14,6 +14,7 @@ from core.conf import settings
 from database.mongodb import mongodb
 from middleware.request_id import RequestIDMiddleware
 from middleware.request_log import RequestLogMiddleware
+from middleware.rate_limit import RateLimitMiddleware
 
 
 def _configure_logging() -> None:
@@ -62,6 +63,7 @@ def _register_middleware(app: FastAPI) -> None:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(RequestLogMiddleware)
     app.add_middleware(RequestIDMiddleware)
 
