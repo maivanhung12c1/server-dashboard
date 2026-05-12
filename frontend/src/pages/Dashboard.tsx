@@ -1,4 +1,4 @@
-import { Cpu, RefreshCw, Server, TrendingUp, Wifi } from "lucide-react";
+import { Cpu, RefreshCw, Server, TrendingUp, Wifi, X } from "lucide-react";
 import { useState } from "react";
 import ActivityLog from "@/components/dashboard/ActivityLog";
 import ChartCard from "@/components/dashboard/ChartCard";
@@ -17,11 +17,14 @@ const RANGES: { label: string; value: Range }[] = [
 
 export default function Dashboard() {
   const [range, setRange] = useState<Range>("7d");
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const { data: overview, loading: overviewLoading } = useOverviewStats();
-  const { data: timeseries, loading: timeseriesLoading } =
-    useTimeseriesStats(range);
-  const { data: activities, loading: activityLoading } = useActivities(15);
+  const { data: overview, loading: overviewLoading, error: overviewError } = useOverviewStats(refreshKey);
+  const { data: timeseries, loading: timeseriesLoading, error: timeseriesError } =
+    useTimeseriesStats(range, undefined, undefined, refreshKey);
+  const { data: activities, loading: activityLoading, error: activityError } = useActivities(15, refreshKey);
+
+  const pageError = overviewError ?? timeseriesError ?? activityError;
 
   const onlineCount =
     overview?.by_status.find((s) => s.name === "Online")?.count ?? 0;
@@ -29,7 +32,7 @@ export default function Dashboard() {
     overview?.by_status.find((s) => s.name === "Offline")?.count ?? 0;
 
   function refresh() {
-    window.location.reload();
+    setRefreshKey((k) => k + 1);
   }
 
   return (
@@ -47,6 +50,18 @@ export default function Dashboard() {
           Refresh
         </button>
       </div>
+
+      {pageError && (
+        <div className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-between">
+          <p className="text-sm text-red-400">{pageError}</p>
+          <button
+            onClick={refresh}
+            className="text-red-400 hover:text-red-300 ml-4 flex-shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
