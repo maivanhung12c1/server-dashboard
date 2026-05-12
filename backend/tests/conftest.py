@@ -7,7 +7,7 @@ Strategy:
   - get_db dependency overridden per test
   - mongodb.connect/disconnect patched out (no real connection)
 """
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -15,6 +15,13 @@ from mongomock_motor import AsyncMongoMockClient
 
 from database.mongodb import get_db, mongodb
 from main import app
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limit(monkeypatch):
+    mock_cfg = MagicMock()
+    mock_cfg.RATE_LIMIT_ENABLED = False
+    monkeypatch.setattr("middleware.rate_limit.settings", mock_cfg)
 
 
 @pytest.fixture
