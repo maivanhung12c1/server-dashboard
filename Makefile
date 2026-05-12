@@ -1,0 +1,88 @@
+.PHONY: dev dev-d dev-build down down-v restart-be \
+        logs-be logs-mongo \
+        shell-be shell-mongo shell-fe \
+        lint lint-fix \
+        test test-unit test-integration \
+        seed prod
+
+# Development
+
+dev:
+	docker compose -f docker-compose.dev.yml up --remove-orphans
+
+dev-d:
+	docker compose -f docker-compose.dev.yml up -d --remove-orphans
+
+dev-build:
+	docker compose -f docker-compose.dev.yml up --build -d --remove-orphans
+
+down:
+	docker compose -f docker-compose.dev.yml down
+
+down-v:
+	docker compose -f docker-compose.dev.yml down -v
+
+restart-be:
+	docker compose -f docker-compose.dev.yml restart backend
+
+# Logs
+
+logs-be:
+	docker compose -f docker-compose.dev.yml logs -f backend
+
+logs-mongo:
+	docker compose -f docker-compose.dev.yml logs -f mongodb
+
+# Shell
+
+shell-be:
+	docker compose -f docker-compose.dev.yml exec backend bash
+
+shell-fe:
+	docker compose -f docker-compose.dev.yml exec frontend sh
+
+shell-mongo:
+	docker compose -f docker-compose.dev.yml exec mongodb mongosh \
+	  -u $${MONGO_USER:-admin} -p $${MONGO_PASSWORD:-changeme} \
+	  --authenticationDatabase admin $${MONGO_DB:-server_dashboard}
+
+# Lint
+
+lint:
+	docker compose -f docker-compose.dev.yml exec backend ruff check .
+
+lint-fix:
+	docker compose -f docker-compose.dev.yml exec backend ruff check . --fix
+
+# Tests
+
+test-unit:
+	docker compose -f docker-compose.dev.yml exec backend \
+	  pytest tests/unit/ -v
+
+test-integration:
+	docker compose -f docker-compose.dev.yml exec backend \
+	  pytest tests/integration/ -v
+
+test:
+	docker compose -f docker-compose.dev.yml exec backend \
+	  pytest tests/ -v --tb=short
+
+seed:
+	docker compose -f docker-compose.dev.yml exec backend python seed.py
+
+# Frontend
+
+build-fe:
+	docker compose -f docker-compose.dev.yml exec frontend npm run build
+
+# Production 
+
+prod:
+	docker compose -f docker-compose.prod.yml up -d
+
+prod-down:
+	docker compose -f docker-compose.prod.yml down
+
+prod-logs:
+	docker compose -f docker-compose.prod.yml logs -f

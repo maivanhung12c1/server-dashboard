@@ -1,0 +1,9 @@
+-r requirements.txt
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.0
+mongomock-motor==0.0.34
+ruff==0.4.4
+pytest-cov==6.0.0
