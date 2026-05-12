@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from tests.conftest import make_server
@@ -195,3 +197,15 @@ async def test_search_brackets_treated_as_literal(client):
     data = res.json()["data"]
     assert data["total"] == 1
     assert data["items"][0]["name"] == "[Oo]nline-server"
+
+
+# Race condition
+
+async def test_concurrent_create_same_name_returns_409_not_500(client):
+    results = await asyncio.gather(
+        client.post("/api/v1/servers", json=make_server()),
+        client.post("/api/v1/servers", json=make_server()),
+        return_exceptions=True,
+    )
+    statuses = sorted([r.status_code for r in results])
+    assert statuses == [201, 409], f"Expected [201, 409], got {statuses}"

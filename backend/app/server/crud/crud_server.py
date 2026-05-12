@@ -3,7 +3,9 @@ import uuid
 from datetime import datetime
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from pymongo.errors import DuplicateKeyError
 
+from common.exception.errors import ConflictError
 from utils.datetime_utils import utcnow
 
 
@@ -60,7 +62,10 @@ class CRUDServer:
             "created_at": now,
             "updated_at": now,
         }
-        await db[self.COLLECTION].insert_one(doc)
+        try:
+            await db[self.COLLECTION].insert_one(doc)
+        except DuplicateKeyError:
+            raise ConflictError(f"Server with name '{data['name']}' already exists")
         return doc
     
     async def update(
@@ -68,11 +73,14 @@ class CRUDServer:
     ) -> dict | None:
         data["updated_at"] = utcnow()
         from pymongo import ReturnDocument
-        return await db[self.COLLECTION].find_one_and_update(
-            {"_id": server_id},
-            {"$set": data},
-            return_document=ReturnDocument.AFTER
-        )
+        try:
+            return await db[self.COLLECTION].find_one_and_update(
+                {"_id": server_id},
+                {"$set": data},
+                return_document=ReturnDocument.AFTER,
+            )
+        except DuplicateKeyError:
+            raise ConflictError(f"Server with name '{data['name']}' already exists")
     
     async def delete(self, db: AsyncIOMotorDatabase, server_id: str) -> bool:
         result = await db[self.COLLECTION].delete_one({"_id": server_id})
