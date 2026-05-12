@@ -37,11 +37,12 @@ async def client(mock_db):
 
     with patch.object(mongodb, "connect", AsyncMock()):
         with patch.object(mongodb, "disconnect", AsyncMock()):
-            async with AsyncClient(
-                transport=ASGITransport(app=app),
-                base_url="http://test",
-            ) as ac:
-                yield ac
+            with patch.object(mongodb, "ping", AsyncMock(return_value=True)):                                                                                                                                                                         
+                  async with AsyncClient(                                                                                                                                                                                                               
+                      transport=ASGITransport(app=app),
+                      base_url="http://test",                                                                                                                                                                                                           
+                  ) as ac:
+                      yield ac
 
     app.dependency_overrides.clear()
 
