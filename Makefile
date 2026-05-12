@@ -3,7 +3,7 @@
         shell-be shell-mongo shell-fe \
         lint lint-fix \
         test test-unit test-integration \
-        seed
+        seed prod
 
 # Development
 
@@ -75,3 +75,14 @@ seed:
 
 build-fe:
 	docker compose -f docker-compose.dev.yml exec frontend npm run build
+
+# Production 
+
+prod:
+	docker compose -f docker-compose.prod.yml up -d
+
+prod-down:
+	docker compose -f docker-compose.prod.yml down
+
+prod-logs:
+	docker compose -f docker-compose.prod.yml logs -f
